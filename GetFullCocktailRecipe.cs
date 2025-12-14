@@ -28,12 +28,23 @@ public class GetFullCocktailRecipe
     {
         _logger.LogInformation("C# HTTP trigger function processed a request.");
 
-        using HttpClient client = new();;
-        string cocktails = await Helper_GetFullCocktailRecipe(client, "11118");
+        string? drinkId = req.Query.Get("drinkId");
+        var response = req.CreateResponse();;
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        response.Headers.Add("Content-type", "application/json");
-        await response.WriteStringAsync(cocktails);     
+        if(drinkId == null)
+        {
+            response.StatusCode = HttpStatusCode.BadRequest;
+            await response.WriteStringAsync("Please enter the cocktail ID to search by.");
+        }
+        else
+        {
+            using HttpClient client = new();;
+            string cocktails = await Helper_GetFullCocktailRecipe(client, drinkId);
+
+            response.StatusCode = HttpStatusCode.OK;
+            response.Headers.Add("Content-type", "application/json");
+            await response.WriteStringAsync(cocktails);     
+        }
 
         return response;
     }

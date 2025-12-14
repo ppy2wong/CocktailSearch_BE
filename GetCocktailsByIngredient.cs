@@ -27,12 +27,26 @@ public class GetCocktailsByIngredient
     public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req)    {
         _logger.LogInformation("C# HTTP trigger function processed a request.");
 
-        using HttpClient client = new();;
-        string cocktails = await Helper_GetCocktailsByIngredient(client, "cointreau");
+        string? ingredient = req.Query.Get("ingredient");
+        var response = req.CreateResponse();;
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        response.Headers.Add("Content-type", "application/json");
-        await response.WriteStringAsync(cocktails);     
+        if(ingredient == null)
+        {
+            response.StatusCode = HttpStatusCode.BadRequest;
+            await response.WriteStringAsync("Please enter the ingredient to search by.");
+            
+        }
+        else
+        {
+            using HttpClient client = new();;
+            string cocktails = await Helper_GetCocktailsByIngredient(client, ingredient);
+
+            response.StatusCode = HttpStatusCode.OK;
+            response.Headers.Add("Content-type", "application/json");
+            await response.WriteStringAsync(cocktails);     
+            
+        }
+
 
         return response;
     }

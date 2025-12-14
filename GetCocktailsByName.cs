@@ -9,6 +9,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
 namespace Net.CocktailSearch;
@@ -25,16 +26,28 @@ public class GetCocktailsByName
     [Function("GetCocktailsByName")]
     public async Task<HttpResponseData> Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", "post")] HttpRequestData req)
     {
-        _logger.LogInformation("C# HTTP trigger function processed a request.");
+        string? name = req.Query.Get("name");
+        var response = req.CreateResponse();;
 
-        using HttpClient client = new();;
-        string cocktails = await Helper_GetCocktailsByName(client, "margarita");
 
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        response.Headers.Add("Content-type", "application/json");
-        await response.WriteStringAsync(cocktails);     
+        if(name == null)
+        {
+            response.StatusCode = HttpStatusCode.BadRequest;
+            await response.WriteStringAsync("Please enter the name of the cocktail to search by.");
+        }
+        else
+        {
+            using HttpClient client = new();;
 
+            string cocktails = await Helper_GetCocktailsByName(client, name);
+
+            response.StatusCode = HttpStatusCode.OK;
+            response.Headers.Add("Content-type", "application/json");
+            await response.WriteStringAsync(cocktails);     
+            
+        }
         return response;
+
     }
 
     private async Task<string> Helper_GetCocktailsByName(HttpClient client, String cocktailName)
